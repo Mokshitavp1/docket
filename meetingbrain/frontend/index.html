@@ -1,0 +1,133 @@
+<!DOCTYPE html>
+<html lang="en" class="dark">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="description" content="MeetingBrain — AI-powered meeting assistant. Auto-generate tasks, minutes, and reminders from your meetings." />
+    <meta name="theme-color" content="#0f172a" />
+
+    <!-- Favicon -->
+    <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+
+    <!-- Preconnect to Google Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500&display=swap"
+      rel="stylesheet"
+    />
+
+    <title>MeetingBrain — AI Meeting Assistant</title>
+
+    <style>
+      /* Critical CSS — prevent flash of unstyled content */
+      *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+      html, body {
+        height: 100%;
+        background-color: #0f172a;
+        color: #f1f5f9;
+        font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+        -webkit-font-smoothing: antialiased;
+        -moz-osx-font-smoothing: grayscale;
+      }
+
+      #root { height: 100%; }
+
+      /* Initial loading screen */
+      #initial-loader {
+        position: fixed;
+        inset: 0;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        background: #0f172a;
+        z-index: 9999;
+        gap: 16px;
+        transition: opacity 0.3s ease;
+      }
+
+      #initial-loader.hidden {
+        opacity: 0;
+        pointer-events: none;
+      }
+
+      .loader-logo {
+        width: 48px;
+        height: 48px;
+        background: linear-gradient(135deg, #2563eb, #1d4ed8);
+        border-radius: 12px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 24px;
+        font-weight: 800;
+        color: white;
+        letter-spacing: -1px;
+        box-shadow: 0 0 20px rgba(37, 99, 235, 0.4);
+      }
+
+      .loader-text {
+        font-size: 20px;
+        font-weight: 700;
+        color: #f1f5f9;
+        letter-spacing: -0.5px;
+      }
+
+      .loader-spinner {
+        width: 32px;
+        height: 32px;
+        border: 3px solid rgba(37, 99, 235, 0.2);
+        border-top-color: #2563eb;
+        border-radius: 50%;
+        animation: spin 0.8s linear infinite;
+      }
+
+      .loader-subtitle {
+        font-size: 13px;
+        color: #64748b;
+        margin-top: -8px;
+      }
+
+      @keyframes spin {
+        to { transform: rotate(360deg); }
+      }
+
+      /* Scrollbar styling */
+      ::-webkit-scrollbar { width: 6px; height: 6px; }
+      ::-webkit-scrollbar-track { background: transparent; }
+      ::-webkit-scrollbar-thumb { background: #334155; border-radius: 3px; }
+      ::-webkit-scrollbar-thumb:hover { background: #475569; }
+
+      /* Selection color */
+      ::selection { background: rgba(37, 99, 235, 0.3); color: #f1f5f9; }
+    </style>
+  </head>
+
+  <body>
+    <!-- Initial loading screen (hidden once React mounts) -->
+    <div id="initial-loader">
+      <div class="loader-logo">M</div>
+      <div class="loader-text">MeetingBrain</div>
+      <div class="loader-subtitle">AI-powered meeting assistant</div>
+      <div class="loader-spinner"></div>
+    </div>
+
+    <!-- React root -->
+    <div id="root"></div>
+
+    <!-- Hide loader once app mounts -->
+    <script>
+      window.__hideLoader = function () {
+        const loader = document.getElementById('initial-loader');
+        if (loader) {
+          loader.classList.add('hidden');
+          setTimeout(() => loader.remove(), 300);
+        }
+      };
+    </script>
+
+    <script type="module" src="/src/main.tsx"></script>
+  </body>
+</html>
