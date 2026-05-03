@@ -1,0 +1,185 @@
+// backend/prisma/schema.prisma
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id                String              @id @default(cuid())
+  email             String              @unique
+  password          String
+  name              String
+  avatar            String?
+  googleCalendarToken String?
+  createdAt         DateTime            @default(now())
+  updatedAt         DateTime            @updatedAt
+
+  // Relations
+  ownedWorkspaces   Workspace[]         @relation("WorkspaceOwner")
+  memberships       WorkspaceMember[]
+  assignedTasks     Task[]              @relation("TaskAssignee")
+  createdTasks      Task[]              @relation("TaskCreator")
+  hostedMeetings    Meeting[]           @relation("MeetingHost")
+  notifications     Notification[]
+
+  @@map("users")
+}
+
+model Workspace {
+  id          String            @id @default(cuid())
+  name        String
+  description String?
+  createdAt   DateTime          @default(now())
+  updatedAt   DateTime          @updatedAt
+
+  // Relations
+  ownerId     String
+  owner       User              @relation("WorkspaceOwner", fields: [ownerId], references: [id], onDelete: Cascade)
+  members     WorkspaceMember[]
+  meetings    Meeting[]
+
+  @@map("workspaces")
+}
+
+model WorkspaceMember {
+  id          String          @id @default(cuid())
+  role        WorkspaceRole   @default(MEMBER)
+  joinedAt    DateTime        @default(now())
+
+  // Relations
+  workspaceId String
+  workspace   Workspace       @relation(fields: [workspaceId], references: [id], onDelete: Cascade)
+  userId      String
+  user        User            @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([workspaceId, userId])
+  @@map("workspace_members")
+}
+
+enum WorkspaceRole {
+  ADMIN
+  MEMBER
+}
+
+model Meeting {
+  id            String          @id @default(cuid())
+  title         String
+  description   String?
+  status        MeetingStatus   @default(SCHEDULED)
+  startedAt     DateTime?
+  endedAt       DateTime?
+  transcript    String?         @db.Text
+  audioUrl      String?
+  duration      Int?            // in seconds
+  createdAt     DateTime        @default(now())
+  updatedAt     DateTime        @updatedAt
+
+  // Relations
+  workspaceId   String
+  workspace     Workspace       @relation(fields: [workspaceId], references: [id], onDelete: Cascade)
+  hostId        String
+  host          User            @relation("MeetingHost", fields: [hostId], references: [id])
+  tasks         Task[]
+  mom           MinutesOfMeeting?
+
+  @@map("meetings")
+}
+
+enum MeetingStatus {
+  SCHEDULED
+  RECORDING
+  PROCESSING
+  REVIEW
+  COMPLETED
+  CANCELLED
+}
+
+model MinutesOfMeeting {
+  id            String    @id @default(cuid())
+  title         String
+  date          DateTime
+  attendees     String[]
+  agenda        String?   @db.Text
+  summary       String    @db.Text
+  decisions     String[]
+  nextSteps     String[]
+  rawContent    String    @db.Text
+  confirmedAt   DateTime?
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
+
+  // Relations
+  meetingId     String    @unique
+  meeting       Meeting   @relation(fields: [meetingId], references: [id], onDelete: Cascade)
+
+  @@map("minutes_of_meeting")
+}
+
+model Task {
+  id              String        @id @default(cuid())
+  title           String
+  description     String        @db.Text
+  status          TaskStatus    @default(PENDING)
+  priority        TaskPriority  @default(MEDIUM)
+  deadline        DateTime?
+  reminderSentAt  DateTime?
+  emailSentAt     DateTime?
+  calendarEventId String?
+  confirmedAt     DateTime?
+  createdAt       DateTime      @default(now())
+  updatedAt       DateTime      @updatedAt
+
+  // Relations
+  meetingId       String
+  meeting         Meeting       @relation(fields: [meetingId], references: [id], onDelete: Cascade)
+  assigneeId      String?
+  assignee        User?         @relation("TaskAssignee", fields: [assigneeId], references: [id])
+  createdById     String
+  createdBy       User          @relation("TaskCreator", fields: [createdById], references: [id])
+
+  @@map("tasks")
+}
+
+enum TaskStatus {
+  PENDING
+  IN_PROGRESS
+  COMPLETED
+  CANCELLED
+}
+
+enum TaskPriority {
+  LOW
+  MEDIUM
+  HIGH
+  URGENT
+}
+
+model Notification {
+  id          String              @id @default(cuid())
+  title       String
+  message     String
+  type        NotificationType
+  read        Boolean             @default(false)
+  link        String?
+  createdAt   DateTime            @default(now())
+
+  // Relations
+  userId      String
+  user        User                @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@map("notifications")
+}
+
+enum NotificationType {
+  TASK_ASSIGNED
+  TASK_REMINDER
+  TASK_UPDATED
+  MEETING_STARTED
+  MEETING_ENDED
+  WORKSPACE_INVITE
+}
